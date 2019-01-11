@@ -18,7 +18,7 @@ YSocketDevice::YSocketDevice(LPCSTR pszAppPath)
 	m_nUseLog = 0;
 	CString strConfigFile(pszAppPath);
 	strConfigFile += _T("\\EMS.ini");
-	InitConfigFile(pszAppPath);
+	InitConfigFile(strConfigFile);
 
 	COPCIniFile file;
 	if (file.Open(strConfigFile, CFile::modeRead))
@@ -29,11 +29,11 @@ YSocketDevice::YSocketDevice(LPCSTR pszAppPath)
 		file.Close();
 	}
 	YOPCItem* pItem = GetItemById(1054);
-// 	LoadBool();
-// 	LoadFloat();
-// 	LoadLong();
-// 	LoadShort();
-// 	LoadString();
+	// 	LoadBool();
+	// 	LoadFloat();
+	// 	LoadLong();
+	// 	LoadShort();
+	// 	LoadString();
 }
 
 YSocketDevice::~YSocketDevice(void)
@@ -41,9 +41,9 @@ YSocketDevice::~YSocketDevice(void)
 	POSITION pos = y_ItemArray.GetStartPosition();
 	YSocketItem* pItem = NULL;
 	CString strName;
-	while(pos){
-		y_ItemArray.GetNextAssoc(pos,strName,(CObject*&)pItem);
-		if(pItem)
+	while (pos) {
+		y_ItemArray.GetNextAssoc(pos, strName, (CObject*&)pItem);
+		if (pItem)
 		{
 			delete pItem;
 			pItem = NULL;
@@ -54,9 +54,10 @@ YSocketDevice::~YSocketDevice(void)
 
 void YSocketDevice::Serialize(CArchive& ar)
 {
-	if (ar.IsStoring()){
+	if (ar.IsStoring()) {
 		//		Store(ar);
-	}else{
+	}
+	else {
 		Load(ar);
 	}
 }
@@ -73,7 +74,9 @@ BOOL YSocketDevice::InitConfigFile(CString strFile)
 
 	m_nUseLog = iniFile.GetUInt("LogInfo", "Enable", 0);
 
-	m_strDeviceDescription = iniFile.GetString("param", "DevDesc","SIM");
+	m_strDeviceDescription = iniFile.GetString("param", "DevDesc", "SIM");
+
+	m_nBunchSize = iniFile.GetUInt("param", "UpdateSize", 10);
 	return TRUE;
 }
 
@@ -102,16 +105,15 @@ void YSocketDevice::LoadFloatFromFile(CArchive& ar)
 					if (!pIniFile->ExtractSubValue(strTmp, strValue, 1))
 						throw new CItemException(CItemException::invalidId, pIniFile->GetFileName());
 					dwItemId = atoi(strValue);
-					if (dwItemId == 1054)
-					{
-						int Q = 0;
-					}
+
+					dwItemId = GetItemsCount() + 1;
+
 					if (!pIniFile->ExtractSubValue(strTmp, strItemName, 2))strItemName = _T("Unknown");
 					if (!pIniFile->ExtractSubValue(strTmp, strItemDesc, 3)) strItemDesc = _T("Unknown");
 					pItem = new YFloatItem(dwItemId, strItemName, strItemDesc);
 					if (GetItemByName(pItem->GetName()))
 						delete pItem;
-					else 
+					else
 						y_ItemArray.SetAt(pItem->GetName(), (CObject*)pItem);
 				}
 			}
@@ -145,6 +147,7 @@ void YSocketDevice::LoadBoolFromFile(CArchive& ar)
 					if (!pIniFile->ExtractSubValue(strTmp, strValue, 1))
 						throw new CItemException(CItemException::invalidId, pIniFile->GetFileName());
 					dwItemId = atoi(strValue);
+					dwItemId = GetItemsCount() + 1;
 					if (!pIniFile->ExtractSubValue(strTmp, strItemName, 2))strItemName = _T("Unknown");
 					if (!pIniFile->ExtractSubValue(strTmp, strItemDesc, 3)) strItemDesc = _T("Unknown");
 					pItem = new YBoolItem(dwItemId, strItemName, strItemDesc);
@@ -166,31 +169,31 @@ void YSocketDevice::LoadBoolFromFile(CArchive& ar)
 void YSocketDevice::LoadItems(CArchive& ar)
 {
 	COPCIniFile* pIniFile = static_cast<COPCIniFile*>(ar.GetFile());
-	YOPCItem* pItem  = NULL;
+	YOPCItem* pItem = NULL;
 	int nItems = 0;
 	CString strTmp = ("ItemList");
 	int dwItemId = 0;
-	CString strItemName,strItemDesc,strValue;
+	CString strItemName, strItemDesc, strValue;
 
-	if(pIniFile->ReadNoSeqSection(strTmp)){
-		nItems = pIniFile->GetItemsCount(strTmp,"Item");
-		for (int i=0;i<nItems && !pIniFile->Endof();i++ )
+	if (pIniFile->ReadNoSeqSection(strTmp)) {
+		nItems = pIniFile->GetItemsCount(strTmp, "Item");
+		for (int i = 0; i < nItems && !pIniFile->Endof(); i++)
 		{
-			try{
-				if (pIniFile->ReadIniItem("Item",strTmp))
+			try {
+				if (pIniFile->ReadIniItem("Item", strTmp))
 				{
-					if (!pIniFile->ExtractSubValue(strTmp,strValue,1))
-						throw new CItemException(CItemException::invalidId,pIniFile->GetFileName());
+					if (!pIniFile->ExtractSubValue(strTmp, strValue, 1))
+						throw new CItemException(CItemException::invalidId, pIniFile->GetFileName());
 					dwItemId = atoi(strValue);
-					if(!pIniFile->ExtractSubValue(strTmp,strItemName,2))strItemName = _T("Unknown");
-					if(!pIniFile->ExtractSubValue(strTmp,strItemDesc,3)) strItemDesc = _T("Unknown");
-					pItem = new YShortItem(dwItemId,strItemName,strItemDesc);
-					if(GetItemByName(pItem->GetName()))delete pItem;
-					else y_ItemArray.SetAt(pItem->GetName(),(CObject*)pItem);
+					if (!pIniFile->ExtractSubValue(strTmp, strItemName, 2))strItemName = _T("Unknown");
+					if (!pIniFile->ExtractSubValue(strTmp, strItemDesc, 3)) strItemDesc = _T("Unknown");
+					pItem = new YShortItem(dwItemId, strItemName, strItemDesc);
+					if (GetItemByName(pItem->GetName()))delete pItem;
+					else y_ItemArray.SetAt(pItem->GetName(), (CObject*)pItem);
 				}
 			}
-			catch(CItemException* e){
-				if(pItem){
+			catch (CItemException* e) {
+				if (pItem) {
 					delete pItem;
 					pItem = NULL;
 				}
@@ -296,10 +299,10 @@ void YSocketDevice::LoadLong()
 
 void YSocketDevice::OnUpdate()
 {
-	if(!m_bUpdate)return;
+	if (!m_bUpdate)return;
 	y_lUpdateTimer--;
-	if(y_lUpdateTimer>0)return;
-	y_lUpdateTimer = m_lRate/1000;
+	if (y_lUpdateTimer > 0)return;
+	y_lUpdateTimer = m_lRate / 1000;
 	QueryOnce();
 }
 
@@ -320,105 +323,101 @@ int YSocketDevice::QueryOnce()
 			return 0;
 
 		pFind = NULL;
-		nNum = (rand() % 80);
-		nNum += 1000;
-		if (nNum > 0 && nNum < 1080)
+		nNum = (rand() % GetItemsCount());
+		if (!pArray.Lookup(nNum, (CObject*&)pFind))
 		{
-			if (!pArray.Lookup(nNum, (CObject*&)pFind))
-			{
-				pItem = GetItemById(nNum);
-				if(pItem == NULL)
-					continue;
-				pItem->GetTypeString(&nType);
+			pItem = GetItemById(nNum);
+			if (pItem == NULL)
+				continue;
+			pItem->GetTypeString(&nType);
 #pragma region 更新值选项
 
-				switch (nType)
-				{
-				case 0://BOOL
-				{
-					if (!bTurn)
-						pItem->SetVarValue("FALSE");
-					else
-						pItem->SetVarValue("TRUE");
-				}
-				break;
-				case 1://"BYTE"
-				{
-
-				}
-				break;
-				case 2://"Int"
-				{
-					if (!bTurn)
-						pItem->SetVarValue("0");
-					else
-						pItem->SetVarValue("1");
-				}
-				break;
-				case 3:// SHORT3
-				{
-					if (!bTurn)
-						pItem->SetVarValue("0");
-					else
-						pItem->SetVarValue("1");
-				}
-				break;
-				case 4:// LONG 4
-				{
-					if (!bTurn)
-					{
-						strValue.Format("%d", (rand() % 100));
-					}
-					else {
-						strValue.Format("%d", (rand() % 100));
-					}
-					pItem->SetVarValue(strValue);
-				}
-				break;
-				case 5:// FLOAT
-				{
-					if (!bTurn)
-					{
-						strValue.Format("%f", (float)(rand() % 1000) / 100.0f);
-					}
-					else {
-						strValue.Format("%f", (float)(rand() % 1000) / 100.0f);
-					}
-					strValue.Format("%f", atof(strValue) + pItem->GetFloatValue());
-					pItem->SetVarValue(strValue);
-				}
-				break;
-				case 6:// DOUBLE 6
-				{
-					if (!bTurn)
-					{
-						strValue.Format("%f", (float)(rand() % 5000) / 100.0f);
-					}
-					else {
-						strValue.Format("%f", (float)(rand() % 5000) / 100.0f);
-					}
-					pItem->SetVarValue(strValue);
-				}
-				break;
-				case 7://BSTR 7
-				{
-					if (!bTurn) {
-						strValue.Format("%d", (rand() % 10) * 1111);
-						pItem->SetVarValue(strValue);
-					}
-					else {
-						strValue.Format("%d", (rand() % 10) * 1111);
-						pItem->SetVarValue(strValue);
-					}
-				}
-				break;
-				}
-#pragma endregion 更新值选项
-				pArray.SetAt(nNum, (CObject*)pItem);
-				::SendMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)pItem);
+			switch (nType)
+			{
+			case 0://BOOL
+			{
+				if (!bTurn)
+					pItem->SetVarValue("FALSE");
+				else
+					pItem->SetVarValue("TRUE");
 			}
+			break;
+			case 1://"BYTE"
+			{
+
+			}
+			break;
+			case 2://"Int"
+			{
+				if (!bTurn)
+					pItem->SetVarValue("0");
+				else
+					pItem->SetVarValue("1");
+			}
+			break;
+			case 3:// SHORT3
+			{
+				if (!bTurn)
+					pItem->SetVarValue("0");
+				else
+					pItem->SetVarValue("1");
+			}
+			break;
+			case 4:// LONG 4
+			{
+				if (!bTurn)
+				{
+					strValue.Format("%d", (rand() % 100));
+				}
+				else {
+					strValue.Format("%d", (rand() % 100));
+				}
+				pItem->SetVarValue(strValue);
+			}
+			break;
+			case 5:// FLOAT
+			{
+				if (!bTurn)
+				{
+					strValue.Format("%f", (float)(rand() % 1000) / 100.0f);
+				}
+				else {
+					strValue.Format("%f", (float)(rand() % 1000) / 100.0f);
+				}
+				strValue.Format("%f", atof(strValue) + pItem->GetFloatValue());
+				pItem->SetVarValue(strValue);
+			}
+			break;
+			case 6:// DOUBLE 6
+			{
+				if (!bTurn)
+				{
+					strValue.Format("%f", (float)(rand() % 5000) / 100.0f);
+				}
+				else {
+					strValue.Format("%f", (float)(rand() % 5000) / 100.0f);
+				}
+				pItem->SetVarValue(strValue);
+			}
+			break;
+			case 7://BSTR 7
+			{
+				if (!bTurn) {
+					strValue.Format("%d", (rand() % 10) * 1111);
+					pItem->SetVarValue(strValue);
+				}
+				else {
+					strValue.Format("%d", (rand() % 10) * 1111);
+					pItem->SetVarValue(strValue);
+				}
+			}
+			break;
+			}
+#pragma endregion 更新值选项
+			pArray.SetAt(nNum, (CObject*)pItem);
+			::SendMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)pItem);
 		}
-	} while (pArray.GetCount() != 20);
+	} while (pArray.GetCount() != m_nBunchSize);
 
 
 
@@ -456,7 +455,7 @@ void YSocketDevice::EndUpdateThread()
 
 }
 
-void YSocketDevice::HandleData(BYTE* pBuf,int nLen)
+void YSocketDevice::HandleData(BYTE* pBuf, int nLen)
 {
 
 }
@@ -501,6 +500,6 @@ bool YSocketDevice::SetDeviceItemValue(CBaseItem* pAppItem)
 
 void YSocketDevice::OutPutLog(CString strMsg)
 {
-	if(m_nUseLog)
+	if (m_nUseLog)
 		m_Log.Write(strMsg);
 }

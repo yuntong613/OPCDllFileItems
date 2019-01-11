@@ -40,4 +40,5 @@ protected:
 	int m_nUseLog;
 	CLog m_Log;
 	
+	int m_nBunchSize;
 };
