@@ -415,7 +415,7 @@ int YSocketDevice::QueryOnce()
 			}
 #pragma endregion 更新值选项
 			pArray.SetAt(nNum, (CObject*)pItem);
-			::SendMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)pItem);
+			::PostMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)pItem);
 		}
 	} while (pArray.GetCount() != m_nBunchSize);
 
