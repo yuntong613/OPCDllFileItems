@@ -1,7 +1,7 @@
 #pragma once
 #include "YOPCDevice.h"
 #include "Log.h"
-
+#include <map>
 #include "resource.h"
 
 class YSocketDevice :
@@ -31,6 +31,8 @@ public:
 	void LoadLong();
 
 	void OutPutLog(CString strMsg);
+
+	void InitTurnMap(CString strFilePath);
 public:
 	bool bTurn;
 	bool m_bStopRun;
@@ -41,4 +43,7 @@ protected:
 	CLog m_Log;
 	
 	int m_nBunchSize;
+
+
+	std::map<std::string, std::string> m_mapTurnValues;
 };

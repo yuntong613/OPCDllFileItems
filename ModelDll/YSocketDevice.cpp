@@ -28,7 +28,7 @@ YSocketDevice::YSocketDevice(LPCSTR pszAppPath)
 		LoadFloatFromFile(ar);
 		file.Close();
 	}
-	YOPCItem* pItem = GetItemById(1054);
+	InitTurnMap(CString(pszAppPath));
 	// 	LoadBool();
 	// 	LoadFloat();
 	// 	LoadLong();
@@ -416,9 +416,19 @@ int YSocketDevice::QueryOnce()
 #pragma endregion 更新值选项
 			pArray.SetAt(nNum, (CObject*)pItem);
 			::PostMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)pItem);
+
+			std::map<std::string, std::string>::iterator turn_it = m_mapTurnValues.find((LPCTSTR)pItem->GetName());
+			if (turn_it != m_mapTurnValues.end())
+			{
+				CString strCode = turn_it->second.c_str();
+				YOPCItem* pItTurn = GetItemByName(strCode);
+				if (pItTurn)
+				{
+					pItTurn->OnUpdate(strValue);
+				}
+			}
 		}
 	} while (pArray.GetCount() != m_nBunchSize);
-
 
 
 	bTurn = !bTurn;
@@ -476,9 +486,13 @@ bool YSocketDevice::SetDeviceItemValue(CBaseItem* pAppItem)
 	if (strType.CompareNoCase("Bool") == 0)
 	{
 		if (VARIANT_TRUE == ppItem->m_vItemValue.boolVal)
-			pItem->OnUpdate("TRUE");
-		else
-			pItem->OnUpdate("FALSE");
+		{
+			strValue = "TRUE";
+		}
+		else {
+			strValue = "FALSE";
+		}
+		pItem->OnUpdate(strValue);
 	}
 	if (strType.CompareNoCase("Float") == 0)
 	{
@@ -495,6 +509,17 @@ bool YSocketDevice::SetDeviceItemValue(CBaseItem* pAppItem)
 		strValue.Format("%d", ppItem->m_vItemValue.lVal);
 		pItem->OnUpdate(strValue);
 	}
+
+	std::map<std::string, std::string>::iterator turn_it = m_mapTurnValues.find((LPCTSTR)pItem->GetName());
+	if (turn_it != m_mapTurnValues.end())
+	{
+		CString strCode = turn_it->second.c_str();
+		YOPCItem* pItTurn = GetItemByName(strCode);
+		if (pItTurn)
+		{
+			pItTurn->OnUpdate(strValue);
+		}
+	}
 	return true;
 }
 
@@ -502,4 +527,51 @@ void YSocketDevice::OutPutLog(CString strMsg)
 {
 	if (m_nUseLog)
 		m_Log.Write(strMsg);
+}
+
+void YSocketDevice::InitTurnMap(CString strFilePath)
+{
+	if (!PathFileExists(strFilePath))
+	{
+		CreateDirectoryA(strFilePath, NULL);
+		return;
+	}
+	try
+	{
+
+		CString strConfigFile, strColdConfigFile, strReadLine, strTurnKey, strTurnValue, strFeedBack;
+
+		strConfigFile = strFilePath + "\\TurnValueConfig.ini";
+
+		CStdioFile configfile(strConfigFile, CStdioFile::modeRead);
+		while (configfile.ReadString(strReadLine))
+		{
+			int nPos = 0;
+			//忽略注释行
+			if (strReadLine.Left(2) == "//")
+				continue;
+			if (strReadLine.Left(1) == ";")
+				continue;
+			strTurnKey = strReadLine.Tokenize(",", nPos);
+			if (nPos == -1)
+				continue;
+			strTurnValue = strReadLine.Tokenize(",", nPos);
+			if (nPos == -1)
+				continue;
+			strFeedBack = strReadLine.Tokenize(",", nPos);
+			if (nPos == -1)
+				continue;
+			//A系统数据 -> B系统数据
+			m_mapTurnValues.insert(std::make_pair(strTurnKey, strTurnValue));
+			//如果设置反馈，则 B系统数据 -> A系统数据
+			if (atoi(strFeedBack) == 1)
+			{
+				m_mapTurnValues.insert(std::make_pair(strTurnValue, strTurnKey));
+			}
+		}
+	}
+	catch (CFileException* ex)
+	{
+		ex->Delete();
+	}
 }
