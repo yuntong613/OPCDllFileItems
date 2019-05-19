@@ -3,6 +3,7 @@
 #include "Log.h"
 #include <map>
 #include "resource.h"
+#include <string>
 
 class YSocketDevice :
 	public YOPCDevice

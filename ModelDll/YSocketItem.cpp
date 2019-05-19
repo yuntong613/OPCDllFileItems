@@ -32,7 +32,7 @@ bool YBoolItem::OnUpdate(CString strVal)
 	HWND hWnd;
 	SetVarValue(strVal);
 	GET_EXE_HWND(hWnd);
-	::SendMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
+	::PostMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
 	return true;
 }
 
@@ -60,7 +60,7 @@ bool YShortItem::OnUpdate(CString strVal)
 	HWND hWnd;
 	SetVarValue(strVal);
 	GET_EXE_HWND(hWnd);
-	::SendMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
+	::PostMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
 	return true;
 }
 
@@ -81,7 +81,7 @@ bool YFloatItem::OnUpdate(CString strVal)
 	HWND hWnd;
 	SetVarValue(strVal);
 	GET_EXE_HWND(hWnd);
-	::SendMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
+	::PostMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
 	return true;
 }
 
@@ -112,7 +112,7 @@ bool YStringItem::OnUpdate(CString strVal)
 	HWND hWnd;
 	SetVarValue(strVal);
 	GET_EXE_HWND(hWnd);
-	::SendMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
+	::PostMessage(hWnd,CW_UPDATEITEMVALUE,DIC_ITEM_UPDATE,(LPARAM)this);
 	return true;
 }
 
@@ -141,6 +141,6 @@ bool YLongItem::OnUpdate(CString strVal)
 	HWND hWnd;
 	SetVarValue(strVal);
 	GET_EXE_HWND(hWnd);
-	::SendMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)this);
+	::PostMessage(hWnd, CW_UPDATEITEMVALUE, DIC_ITEM_UPDATE, (LPARAM)this);
 	return true;
 }
